@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",                  // Target the latest ECMAScript version for modern JavaScript features
+    "module": "ESNext",                   // Use ESNext modules (import/export syntax)
+    "moduleResolution": "Node",           // Node.js module resolution strategy
+    "esModuleInterop": true,              // Allow default imports from CommonJS modules
+    "outDir": "./dist",                   // Output directory for compiled JS files
+    "rootDir": "./src",                   // Root directory of your TypeScript files
+    "strict": true,                       // Enable strict type checking
+    "resolveJsonModule": true,            // Allow importing JSON files as modules (if needed)
+    "skipLibCheck": true,                 // Skip type checking of declaration files (optional)
+    "baseUrl": ".",                       // Base directory for relative module resolution
+    "paths": {
+      "*": ["node_modules/*", "src/*"]    // Helps TypeScript resolve imports from 'src' and 'node_modules'
+    }
+  },
+  "include": ["src"],                     // Include all files in the src folder
+  "exclude": ["node_modules"]             // Exclude node_modules (don't compile them)
+}
