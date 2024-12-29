@@ -1,9 +1,11 @@
 import fs from "fs";
 import shell, {error} from "shelljs";
 import * as process from "node:process";
-import {group, log, select, spinner} from "@clack/prompts"
+import {group, log, select, spinner, } from "@clack/prompts"
 import {createSpinner} from "nanospinner";
 import { resolve } from "path";
+import chalk from "chalk";
+import gradient from "gradient-string";
 
 const fileSystem = fs.promises;
 
@@ -32,29 +34,36 @@ export default async function TailwindForReact() {
     try {
         const nano = createSpinner();
         const s = spinner();
-        s.start("Installing tailwind css");
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        shell.exec("npm install -D tailwindcss postcss autoprefixer", {
-            silent : true, async : true
+        s.start(chalk.cyanBright("Installing Tailwind CSS"));
+        await new Promise<void>((resolve, reject) => {
+            shell.exec("npm install -D tailwindcss postcss autoprefixer", { silent : true }, (code, stdout, stderr) => {
+                if (code !== 0) {
+                    reject();
+                } else {
+                    resolve()
+                }
+            })
         })
         s.stop();
-        log.success("Tailwind installed");
-        s.start("Initialising...")
+        log.success(chalk.green(`Tailwind installed (${chalk.dim("latest")})`));
+        s.start("Genarating Tailwind config files.")
         await new Promise(resolve => setTimeout(resolve ,3000));
         shell.exec("npx tailwindcss init -p", {silent: true, async : true});
         s.stop();
-        log.success("Tailwind config files generated: tailwind.config.js and postcss.config.js");
+        log.success(chalk.green("Tailwind config files generated."));
 
         const libraries = await select({
-            message: "Which tailwind Library do wish to install",
+            message: `${chalk.cyan("Select a Tailwind library")}`,
             options: [
                 {
                     value: "nextui",
-                    label: "NextUI"
+                    label: "NextUI",
+                    hint : "v2.4.8"
                 },
                 {
                     value : "daiseyui",
-                    label : "DaiseyUI"
+                    label : "DaisyUI",
+                    hint : "4.12.14"
                 },
                 {
                     value : "flowbite",
@@ -71,7 +80,7 @@ export default async function TailwindForReact() {
                 await fileSystem.access(resolved_path);
             } catch (e : any) {
                 if (e.message.includes("no such file or directory")) {
-                    s.start("We realised that you don't have the NextUI-cli installed, we are installing it for you");
+                    s.start("Installing NextUI CLI");
                     await new Promise<void>((resolve, reject) => {
                         shell.exec("npm install -g nextui-cli", { silent: true }, (code, stdout, stderr) => {
                             if (code !== 0) {

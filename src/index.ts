@@ -3,13 +3,15 @@
 import {Command} from "commander";
 import fs from "fs";
 import TailwindForReact, {nextui_config} from "./react/react.js";
-import {log, select, spinner, confirm} from "@clack/prompts";
+import {log, select, spinner, confirm, intro, outro} from "@clack/prompts";
 import shell from "shelljs";
 import * as process from "node:process";
 import chalk from "chalk";
 import ora from "ora";
 import {resolve} from "path";
 import CSSdirectives from "./css/directives.js";
+import gradient from "gradient-string"
+import {nextui_message} from "./res_messages.js";
 
 const command = new Command();
 const filesystem = fs.promises;
@@ -33,14 +35,16 @@ const framework_options : Frameworkoptions[] = [
 command
     .name("testing")
     .action(async (): Promise<any> => {
-        const s = spinner()
+        const s = spinner();
+        let next;
         try {
+            intro(gradient.passion("WindSpark v2.0.0"))
             s.start("Locating Project Metadata")
             await new Promise(resolve => setTimeout(resolve, 2000));
             await filesystem.access("package.json");
-            log.success("Detected package.json in the Project");
             s.stop()
-            s.start("package.json Detected, analyzing Project for Framework Compatibility")
+            log.success(`Found ${chalk.green("package.json")}`);
+            s.start("Analyzing Project Framework Compatibility")
             await new Promise(resolve => setTimeout(resolve, 2000));
 
             const buffer : Buffer = await filesystem.readFile("package.json");
@@ -48,25 +52,27 @@ command
 
             if (parsed_data.dependencies.react) {
                 s.stop();
+                log.success(`${chalk.cyan("React")} project detected.`)
                 const should_cotinue = await confirm({
-                    message : `${chalk.yellow("React project detected. This tool works only on without Tailwind. Continuing may overwrite Tailwind and CSS current configurations. Proceed?")}`
+                    message : `${chalk.yellowBright(`This tool works only on projects without ${chalk.cyanBright("Tailwind")}. Continuing may overwrite current configurations. Proceed?`)}`
                 });
-                if (should_cotinue === false) {
+                if (should_cotinue !== true) {
                     log.error("Exiting...");
                     process.exit(0);
                 }
 
+
                 const react_library  = await TailwindForReact();
 
                 if (react_library === "nextui") {
+                    next = react_library
                     try {
                         await filesystem.access("tailwind.config.js");
-                        s.start("Writing in Tailwind configuration for Nextui");
+                        s.start("Configuring Nextui in Tailwind.Config.js");
                         await new Promise(resolve => setTimeout(resolve, 3000));
                         await filesystem.writeFile("tailwind.config.js", nextui_config);
                         s.stop();
-                        log.success("Wrote")
-
+                      log.success("Successfully Configured NextUI");
                     } catch (e) {
                         console.log(e)
                     }
@@ -98,10 +104,14 @@ command
             })
                 s.stop();
 
-            log.success("Formatted")
+            log.success(chalk.green("✔ Prettier successfully formated tailwind.config.js"));
+            log.success(chalk.green("✔ Prettier successfully formated index.css"));
 
 
-
+            if (next === "nextui") {
+                log.message(nextui_message);
+                outro("Thank you for using WindSpark");
+            }
         } catch (error) {
             console.log("gg");
             process.exit(0)
